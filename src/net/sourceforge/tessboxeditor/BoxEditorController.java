@@ -645,12 +645,16 @@ public class BoxEditorController implements Initializable {
             imageIndex = 0;
 
             Platform.runLater(() -> {
+                try{
                 paginationPage.setPageCount(imageList.size());
                 paginationPage.setCurrentPageIndex(0);
                 loadImage();
                 this.scrollPaneImage.setVvalue(0); // scroll to top
                 this.scrollPaneImage.setHvalue(0); // scroll to left
                 ((Stage) tableView.getScene().getWindow()).setTitle(JTessBoxEditor.APP_NAME + " - " + selectedFile.getName());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             });
         } catch (OutOfMemoryError oome) {
             new Alert(Alert.AlertType.ERROR, "Out-Of-Memory Exception").show();
@@ -659,6 +663,8 @@ public class BoxEditorController implements Initializable {
             if (e.getMessage() != null) {
                 new Alert(Alert.AlertType.ERROR, e.getMessage()).show();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

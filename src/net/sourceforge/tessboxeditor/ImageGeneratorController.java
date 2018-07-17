@@ -23,6 +23,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.BreakIterator;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -34,6 +36,7 @@ import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -49,7 +52,9 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
@@ -85,6 +90,10 @@ public class ImageGeneratorController implements Initializable {
     private HBox hbFontFolder;
     @FXML
     private TextField tfOutputDir;
+//    @FXML
+//    private CheckBox chbLowReso;
+    @FXML
+    private ChoiceBox<String> cibReso;
     @FXML
     private TextField tfPrefix;
     @FXML
@@ -127,17 +136,38 @@ public class ImageGeneratorController implements Initializable {
     boolean textChanged;
     int pageNum;
     int startIndex;
-    List<String> allText = new ArrayList<String>();
-    List<List<String>> textPages = new ArrayList<List<String>>();
+    List<String> allText = new ArrayList<>();
+    List<List<String>> textPages = new ArrayList<>();
     BreakIterator breakIterator = BreakIterator.getCharacterInstance();
+
+    private String inputContent = null;
+    private final List<String> DENS_DEF_LIST = (List<String>) java.util.Arrays.asList(
+            new String[]{"0)Fx4/Ix1/T300", "1)Fx1/Ix1/T72", "2)Fx1/Ix1/T96", "3)Fx1/Ix4/T300", "4)Fx1/Ix3/T300"});
 
     private final static Logger logger = Logger.getLogger(ImageGeneratorController.class.getName());
 
+    private double fontScale() {
+        return TiffBoxGeneratorFX.FONT_SCALE_;
+    }
+    
     /**
      * Initializes the controller class.
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        // コンボボックスに項目を追加
+        ObservableList<String> cibItems = FXCollections.observableArrayList(DENS_DEF_LIST);
+        this.cibReso.setItems(cibItems);
+        // Selected Item Changed.
+        cibReso.getSelectionModel().selectedItemProperty()
+                .addListener(new ChangeListener<String>() {
+                    @Override
+                    public void changed(ObservableValue<? extends String> observable, //
+                            String oldValue, String newValue) {
+                        onChgReso(newValue);
+                    }
+                });
+
         String style = prefs.get("trainfontStyle", "");
         // Set fontGen
         fontGen = Font.font(
@@ -145,8 +175,8 @@ public class ImageGeneratorController implements Initializable {
                 style.contains("Bold") ? FontWeight.BOLD : FontWeight.NORMAL,
                 style.contains("Italic") ? FontPosture.ITALIC : FontPosture.REGULAR,
                 prefs.getDouble("trainfontSize", 12));
-        this.taInput.setFont(Utils.deriveFont(fontGen, fontGen.getSize() * 3));
-//        this.taInput.setStyle(String.format("-fx-font-size: %dpx;", (int) fontGen.getSize() * 3));
+        this.taInput.setFont(Utils.deriveFont(fontGen, fontGen.getSize() * fontScale()));
+//        this.taInput.setStyle(String.format("-fx-font-size: %dpx;", (int) fontGen.getSize() * fontScale()));
 //        this.taInput.setStyle("-fx-line-spacing: 1em;");  // no effect!
         this.tfPrefix.setText(prefs.get("trainLanguage", "eng"));
         this.btnFont.setText(fontDesc(fontGen));
@@ -276,10 +306,52 @@ public class ImageGeneratorController implements Initializable {
             }
             commitEditorText(spnH);
         });
+        // 初期選択状態を設定
+        cibReso.getSelectionModel().select(prefs.get("densityDef", ""));
     }
 
     void setMenuBar(MenuBar menuBar) {
         this.menuBar = menuBar;
+    }
+
+    private void onChgReso(String newReso) {
+        if (newReso != null) {
+            int idx = DENS_DEF_LIST.indexOf(newReso);
+            if (idx < 0) {
+                return;
+            }
+            // "0)Fx4/Ix1/T300", "1)Fx1/Ix1/T72", "2)Fx1/Ix1/T96", "3)Fx1/Ix4/T300", "4)Fx1/Ix3/T300"
+            switch (idx) {
+                case 0: // default
+                    TiffBoxGeneratorFX.setFontScale(-1);
+                    TiffBoxGeneratorFX.setImageScale(-1);
+                    TiffBoxGeneratorFX.setTiffDensity(-1);
+                    break;
+                case 1: // "72/72"
+                    TiffBoxGeneratorFX.setFontScale(1.0d);
+                    TiffBoxGeneratorFX.setImageScale(1.0d);
+                    TiffBoxGeneratorFX.setTiffDensity(TiffBoxGeneratorFX.SCRN_RESO_1);
+                    break;
+                case 2: // "96/96"
+                    TiffBoxGeneratorFX.setFontScale(1.0d);
+                    TiffBoxGeneratorFX.setImageScale(1.0d);
+                    TiffBoxGeneratorFX.setTiffDensity(TiffBoxGeneratorFX.SCRN_RESO_2);
+                    break;
+                case 3: // "72/300"
+                    TiffBoxGeneratorFX.setFontScale(1.0d);
+                    TiffBoxGeneratorFX.setImageScale(4.0d);
+                    TiffBoxGeneratorFX.setTiffDensity(-1);
+                    break;
+                case 4: // "96/300"
+                    TiffBoxGeneratorFX.setFontScale(1.0d);
+                    TiffBoxGeneratorFX.setImageScale(3.0d);
+                    TiffBoxGeneratorFX.setTiffDensity(-1);
+                    break;
+                default:
+            }
+            // layoutbox(); // call when spnW changed
+            fillInput();
+        }
     }
 
     /**
@@ -351,8 +423,8 @@ public class ImageGeneratorController implements Initializable {
             Optional<Font> op = dialog.showAndWait();
             if (op.isPresent()) {
                 fontGen = op.get();
-                this.taInput.setFont(Utils.deriveFont(fontGen, fontGen.getSize() * 3));
-//                this.taInput.setStyle(String.format("-fx-font-size: %dpx;", (int) fontGen.getSize() * 3));
+                this.taInput.setFont(Utils.deriveFont(fontGen, fontGen.getSize() * fontScale()));
+//                this.taInput.setStyle(String.format("-fx-font-size: %dpx;", (int) fontGen.getSize() * fontScale()));
                 layoutbox();
                 this.btnFont.setText(fontDesc(fontGen));
                 String curFontName = this.tfFileName.getText();
@@ -388,13 +460,14 @@ public class ImageGeneratorController implements Initializable {
      * grapheme that can be composed of one or multiple Unicode codepoints.
      */
     void layoutbox() {
-        Font textFont = Utils.deriveFont(fontGen, fontGen.getSize() * 4);
+        final Font textFont = Utils.deriveFont(fontGen, fontGen.getSize() * fontScale());
+        final double fsize = textFont.getSize();
         textFlow.setPrefWidth((int) this.spnW.getValue());
         textFlow.getChildren().clear();
         allText.clear();
-        
-        List<Text> texts = new ArrayList<Text>();
-        List<Rectangle> boxes = new ArrayList<Rectangle>();
+
+        List<Shape> texts = new ArrayList<>();
+        List<Rectangle> boxes = new ArrayList<>();
 
         String inputText = taInput.getText();
         breakIterator.setText(inputText);
@@ -406,7 +479,10 @@ public class ImageGeneratorController implements Initializable {
             Text text = new Text(ch);
             text.setFont(textFont);
             texts.add(text);
-            
+            Line l = new Line(0, fsize, fsize * TiffBoxGeneratorFX.CHR_SPC_R, fsize);
+            l.strokeProperty().set(Color.TRANSPARENT);
+            texts.add(l);
+
             Rectangle box = new Rectangle(0, 0, Color.TRANSPARENT);
             boxes.add(box);
 
@@ -446,15 +522,23 @@ public class ImageGeneratorController implements Initializable {
             if (content.startsWith("\uFEFF")) {
                 content = content.substring(1); // remove BOM
             }
-            this.taInput.setText(content);
-            Text text = (Text) taInput.lookup(".text");
-            text.setLineSpacing((int) this.spnLeading.getValue());
-
-            if (this.tabPane.getSelectionModel().isSelected(1)) {
-                layoutbox();
-            }
+            this.inputContent = content;
+            fillInput();
         } catch (IOException e) {
             logger.log(Level.WARNING, e.getMessage(), e);
+        }
+    }
+
+    void fillInput() {
+        if (this.inputContent == null) {
+            return;
+        }
+        this.taInput.setText(inputContent);
+        Text text = (Text) taInput.lookup(".text");
+        text.setLineSpacing((int) this.spnLeading.getValue());
+
+        if (this.tabPane.getSelectionModel().isSelected(1)) {
+            layoutbox();
         }
     }
 
@@ -548,7 +632,7 @@ public class ImageGeneratorController implements Initializable {
                 .filter(b -> b instanceof Rectangle)
                 .map(b -> (Rectangle) b)
                 .collect(Collectors.toList());
-        
+
         int printableHeight = pageNum == 1 ? height - margin * 2 : height - margin * 2 * pageNum;
         Optional<Rectangle> op = boxes.stream().filter(b -> (b.getY() + b.getHeight()) > printableHeight).findFirst();
         if (op.isPresent()) {
@@ -572,6 +656,7 @@ public class ImageGeneratorController implements Initializable {
         }
 
         prefs.putBoolean("Text2Image", chbText2Image.isSelected());
+        prefs.put("densityDef", (String) cibReso.getSelectionModel().getSelectedItem());
         prefs.put("trainLanguage", tfPrefix.getText());
         prefs.put("trainfontName", fontGen.getFamily());
         prefs.putDouble("trainfontSize", fontGen.getSize());

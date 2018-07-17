@@ -30,6 +30,8 @@ public class TessBoxCollection {
     private String appendingSymbols;
     private String prependingSymbols;
     private final ObservableList<TessBox> list; // = FXCollections.observableArrayList();
+    public int pageWidth;
+    public int pageHeight;
 
     public TessBoxCollection() {
         list = FXCollections.observableArrayList();

@@ -37,11 +37,16 @@ public class TessBox {
     public TessBox(String chrs, Rectangle2D rect, short page) {
         this.chrs = new SimpleStringProperty(chrs);
         this.page = page;
-        this.rect = rect;
-        this.x = new SimpleIntegerProperty((int) rect.getMinX());
-        this.y = new SimpleIntegerProperty((int) rect.getMinY());
-        this.width = new SimpleIntegerProperty((int) rect.getWidth());
-        this.height = new SimpleIntegerProperty((int) rect.getHeight());
+//        this.rect = rect;
+        this.x = new SimpleIntegerProperty(0);
+        this.y = new SimpleIntegerProperty(0);
+        this.width = new SimpleIntegerProperty(1);
+        this.height = new SimpleIntegerProperty(1);
+//        this.x = new SimpleIntegerProperty((int) Math.floor(rect.getMinX()));
+//        this.y = new SimpleIntegerProperty((int) Math.floor(rect.getMinY()));
+//        this.width = new SimpleIntegerProperty((int) Math.ceil(rect.getWidth()));
+//        this.height = new SimpleIntegerProperty((int) Math.ceil(rect.getHeight()));
+        this.setRect(rect);
     }
 
     /**
@@ -109,10 +114,10 @@ public class TessBox {
      */
     public void setRect(Rectangle2D rect) {
         this.rect = rect;
-        this.x.set((int) rect.getMinX());
-        this.y.set((int) rect.getMinY());
-        this.width.set((int) rect.getWidth());
-        this.height.set((int) rect.getHeight());
+        this.x.set((int) Math.floor(rect.getMinX()));
+        this.y.set((int) Math.floor(rect.getMinY()));
+        this.width.set((int) Math.ceil(rect.getWidth()));
+        this.height.set((int) Math.ceil(rect.getHeight()));
     }
 
     /**

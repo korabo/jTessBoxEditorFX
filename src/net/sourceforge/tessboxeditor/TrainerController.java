@@ -132,10 +132,15 @@ public class TrainerController implements Initializable {
         } else if (event.getSource() == btnValidate) {
             validate();
         } else if (event.getSource() == btnBrowseTess) {
-            File file = fcTessExecutables.showOpenDialog(btnBrowseTess.getScene().getWindow());
-            if (file != null) {
-                tessDirectory = file.getParentFile().getPath();
-                tfTessDir.setText(tessDirectory);
+            try {
+                File file = fcTessExecutables.showOpenDialog(btnBrowseTess.getScene().getWindow());
+                if (file != null) {
+                    tessDirectory = file.getParentFile().getPath();
+                    tfTessDir.setText(tessDirectory);
+                }
+            } catch (IllegalArgumentException e) {
+                fcTessExecutables.setInitialDirectory(new File("/"));
+                tfTessDir.setText("");
             }
         } else if (event.getSource() == btnBrowseData) {
             File dir = fcTrainingData.showDialog(btnBrowseData.getScene().getWindow());

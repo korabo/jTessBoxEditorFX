@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Spinner?>
@@ -15,9 +16,10 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Font?>
 <?import javafx.scene.text.TextFlow?>
 
-<BorderPane prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.sourceforge.tessboxeditor.ImageGeneratorController">
+<BorderPane prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.sourceforge.tessboxeditor.ImageGeneratorController">
     <top>
         <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
             <items>
@@ -26,12 +28,15 @@
                         <Tooltip text="Use text2image Command" />
                     </tooltip>
                 </CheckBox>
-                <Button fx:id="btnInput" mnemonicParsing="false" onAction="#handleAction" text="Input">
+                <Button fx:id="btnInput" contentDisplay="CENTER" graphicTextGap="1.0" mnemonicParsing="false" onAction="#handleAction" prefHeight="25.0" prefWidth="26.0" text="IN" textAlignment="CENTER">
                     <tooltip>
                         <Tooltip text="Load Text File" />
                     </tooltip>
+               <font>
+                  <Font size="10.0" />
+               </font>
                 </Button>
-                <Label text="Output" />
+                <Label text="Out:" />
                 <TextField fx:id="tfOutputDir" editable="false">
                     <tooltip>
                         <Tooltip text="Ouput Directory" />
@@ -42,6 +47,12 @@
                         <Tooltip text="Browse" />
                     </tooltip>
                 </Button>
+<!--            <CheckBox fx:id="chbLowReso" mnemonicParsing="false" onAction="#handleAction" prefHeight="26.0" prefWidth="44.0" text="LOW RESO" wrapText="true">
+               <font>
+                  <Font size="9.0" />
+               </font>
+            </CheckBox>-->
+            <ChoiceBox fx:id="cibReso" prefHeight="25.0" prefWidth="60.0" />
                 <TextField fx:id="tfPrefix" prefWidth="50.0">
                     <tooltip>
                         <Tooltip text="Prefix (Language Code)" />
